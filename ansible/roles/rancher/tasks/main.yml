@@ -1,0 +1,37 @@
+---
+- name: ensure python-pip is installed
+  apt:
+    pkg: python-pip
+    state: present
+
+- name: ensure docker-compose is installed
+  pip:
+    name: docker-compose
+    state: present
+
+# - name: punch firewall hole to Rancher from my IP
+#   ufw:
+
+- name: add Rancher server Docker-compose template
+  template:
+    dest: "{{ ansible_user_dir }}/rancher-server.yml"
+    src: rancher-server.yml
+
+- name: add docker-gen template directory
+  file:
+    path: /etc/docker-gen/templates
+    mode: 0755
+    state: directory
+
+- name: add nginx default template
+  copy:
+    dest: /etc/docker-gen/templates/nginx.tmpl
+    src: nginx.tmpl
+    mode: 0644
+
+- name: Run Rancher Server stack
+  docker_service:
+    files: rancher-server.yml
+    project_src: "{{ ansible_user_dir }}"
+    project_name: "{{ compose_project_name }}"
+    state: present

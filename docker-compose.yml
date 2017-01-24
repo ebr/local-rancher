@@ -1,0 +1,14 @@
+rancher-server:
+  image: rancher/server
+  ports:
+    - 8080:8080
+  volumes:
+    - db:/var/lib/mysql
+
+# rancher-cli:
+#   # build: .
+#   # dockerfile: Dockerfile_cli
+#   image: local/rancher-cli
+#   command: --version
+#   stdin_open: true
+#   tty: true

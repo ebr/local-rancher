@@ -1,0 +1,6 @@
+FROM library/alpine
+RUN apk add --update curl
+RUN curl -sLO https://releases.rancher.com/cli/v0.4.1/rancher-linux-amd64-v0.4.1.tar.gz 
+RUN tar xzvf rancher-linux-amd64-v0.4.1.tar.gz
+RUN mv rancher-v0.4.1/rancher /usr/local/bin/
+ENTRYPOINT ["/usr/local/bin/rancher"]

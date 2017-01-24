@@ -1,0 +1,44 @@
+version: '2'
+
+services:
+
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+    volumes:
+      - nginx_conf:/etc/nginx/conf.d
+    networks:
+      default:
+        aliases:
+          - '{{ rancher_server_url }}'
+
+  nginx_conf_gen:
+    image: jwilder/docker-gen
+    volumes_from:
+      - nginx
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /etc/docker-gen/templates:/etc/docker-gen/templates
+    command: 
+      - '-notify-sighup'
+      - '{{ compose_project_name }}_nginx_1'
+      - '-watch'
+      - '/etc/docker-gen/templates/nginx.tmpl'
+      - '/etc/nginx/conf.d/default.conf'
+    depends_on:
+      - nginx
+
+  rancher:
+    image: rancher/server:latest
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      - VIRTUAL_HOST={{ rancher_server_url }}
+      - VIRTUAL_PORT=8080
+    depends_on:
+      - nginx_conf_gen
+
+volumes:
+  mysql_data:
+  nginx_conf:

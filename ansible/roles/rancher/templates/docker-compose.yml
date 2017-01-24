@@ -1,0 +1,55 @@
+version: '2'
+
+### THIS FILE SHOULD ONLY BE USED FOR LOCAL TESTING
+
+services:
+
+  # db:
+  #   image: mysql:latest
+  #   volumes: rancher_mysql_data:/var/lib/mysql
+  #
+  # db_setup:
+  #   image:
+
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - nginx_conf:/etc/nginx/conf.d
+      - ./certs:/etc/nginx/certs                                ### Testing
+    networks:
+      default:
+        aliases:
+          - 'rancher.local'                                   ### Testing
+
+  nginx_conf_gen:
+    image: jwilder/docker-gen
+    volumes_from:
+      - nginx
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl     ### Testing
+    command: 
+      - '-notify-sighup'
+      - 'rancher_nginx_1'                                     ### Testing
+      - '-watch'
+      - '/etc/docker-gen/templates/nginx.tmpl'
+      - '/etc/nginx/conf.d/default.conf'
+    depends_on:
+      - nginx
+
+  rancher:
+    image: rancher/server:latest
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      - VIRTUAL_HOST=rancher.local                            ### Testing
+      - VIRTUAL_PORT=8080
+    depends_on:
+      - nginx_conf_gen
+
+volumes:
+  mysql_data:
+  nginx_conf:
